@@ -13,34 +13,45 @@ struct Graph {
 
 impl Graph {
     fn new(nodes: usize, edges: usize) -> Graph{
+        let mut _nodes = vec![0; nodes+1];
+        _nodes[nodes] = 2*edges;
         Graph { 
             num_nodes: nodes,
-            adjacences: Vec::with_capacity(edges),
-            nodes: Vec::with_capacity(nodes),
+            adjacences: Vec::with_capacity(2*edges),
+            nodes: _nodes,
             num_of_nodes_add: 0 
         }
     }
 
-    fn add_node(&mut self, adjacences_of_node: Vec<usize>) {
-        self.num_of_nodes_add += adjacences_of_node.len();
-        self.nodes.push(self.num_of_nodes_add-1);
-        
-        for i in adjacences_of_node {
-            self.adjacences.push(i);
+    fn add_node(&mut self, node: usize, adjacences_of_node: Vec<usize>) {
+        if adjacences_of_node.len() > 0 {
+            //self.nodes.push(self.num_of_nodes_add);
+            self.nodes[node] = self.num_of_nodes_add;
+            
+            for i in &adjacences_of_node {
+                self.adjacences.push(*i);
+            }
         }
+        else {
+            self.nodes[node] = self.num_of_nodes_add;
+        }
+        self.num_of_nodes_add += adjacences_of_node.len();
+        
     }
 
     fn print_graph(&self) {
-        let mut begin: usize = 0;
         for i in 0..self.num_nodes{
             print!("{} - ", i);
 
-            for j in begin..=self.nodes[i]{
+            for j in self.nodes[i]..self.nodes[i+1]{
                 print!("{} ", self.adjacences[j]);
             }
             println!();
-            begin = (self.nodes[i]+1) as usize;
         }
+    }
+
+    fn print_nodes(&self) {
+        println!("{:?}", self.nodes);
     }
 }
 
@@ -83,13 +94,13 @@ fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
     let file = match File::open(&adjlists){
         Ok(file) => file,
         Err(_err) => {
-            println!("{}111", _err); 
+            println!("{}\nLeitura falha", _err); 
             return Err(_err);
         }
     };
     let reader = BufReader::new(&file);
 
-    for (_, line) in reader.lines().enumerate() {
+    for (v, line) in reader.lines().enumerate() {
         if let Ok(line) = line {
             let line: Vec<&str> = line
                 .trim_end()
@@ -106,7 +117,7 @@ fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
                     Err(_err) => {println!("{}", _err);},
                 }
             }
-            graph.add_node(adjacences);
+            graph.add_node(v, adjacences);
 
         }
     }
@@ -124,5 +135,6 @@ fn main() {
     if let Ok(value) = read_graph {
         graph = value;
     }
-    graph.print_graph();
+    //graph.print_graph();
+    graph.print_nodes();
 }
