@@ -1,140 +1,25 @@
 use std::io;
-use std::io::{BufRead, BufReader, Error, Read};
-use std::fs::File;
 
-#[derive(Debug)]
-#[derive(Default)]
-struct Graph {
-    num_nodes: usize,
-    adjacences: Vec<usize>,
-    nodes: Vec<usize>,
-    num_of_nodes_add: usize,
-}
+mod representations ;
+use representations as rep;
 
-impl Graph {
-    fn new(nodes: usize, edges: usize) -> Graph{
-        let mut _nodes = vec![0; nodes+1];
-        _nodes[nodes] = 2*edges;
-        Graph { 
-            num_nodes: nodes,
-            adjacences: Vec::with_capacity(2*edges),
-            nodes: _nodes,
-            num_of_nodes_add: 0 
-        }
-    }
+mod canonize;
+use canonize as can;
 
-    fn add_node(&mut self, node: usize, adjacences_of_node: Vec<usize>) {
-        if adjacences_of_node.len() > 0 {
-            //self.nodes.push(self.num_of_nodes_add);
-            self.nodes[node] = self.num_of_nodes_add;
-            
-            for i in &adjacences_of_node {
-                self.adjacences.push(*i);
-            }
-        }
-        else {
-            self.nodes[node] = self.num_of_nodes_add;
-        }
-        self.num_of_nodes_add += adjacences_of_node.len();
-        
-    }
 
-    fn print_graph(&self) {
-        for i in 0..self.num_nodes{
-            print!("{} - ", i);
+fn main() -> Result<(),Box<dyn std::error::Error>>{
+    let graph = rep::Graph::read_graph_from_archive("../../../graphs_ex/cube/".to_string())?;
+    let mut input = String::new();
 
-            for j in self.nodes[i]..self.nodes[i+1]{
-                print!("{} ", self.adjacences[j]);
-            }
-            println!();
-        }
-    }
-
-    fn print_nodes(&self) {
-        println!("{:?}", self.nodes);
-    }
-}
-
-/*
- * Read a Graphs from some archives in a formated pattern
- */
-fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
-    let metadata = format!("{}{}", archives_path, String::from("metadata"));
-    println!("{}", metadata);
-    let mut file = match File::open(&metadata){
-        Ok(file) => file,
-        Err(_err) => {
-            println!("{}111", _err); 
-            return Err(_err);
-        }
-    };
-    
-    // Take a line in metadata, transform in a vector of strings and
-    // after transform in a vector of usize
-    // In the end, create the graph with informations:
-    // number of nodes and number of edges
-    let mut line = String::new();
-    file.read_to_string(&mut line)?;
-    let line: Vec<&str> = line
-        .trim_end()
+    io::stdin().read_line(&mut input)?;
+    let nodes: Vec<usize> = input
         .split_whitespace()
-        .collect();
-    let features: Vec<usize> = line
-        .iter()
-        .map(|&s| s.parse().unwrap())
+        .filter_map(|part| part.parse().ok())
         .collect();
 
-    let mut graph: Graph = Graph::new(features[0], features[1]);
+    let sub_graph = rep::SubGraph::SubGraph::new(nodes, graph);
+    println!("{:?}", sub_graph);
 
-    // Run in adjlists archive, taking each line, transforming in a vector 
-    // of string, transforming into another vector of strings for access only
-    // the first element, and in the end take the first element of the vector
-    // and transform in a usize for ading as an element adjacence of the node
-    let adjlists = format!("{}{}", archives_path, String::from("adjlists"));
-    let file = match File::open(&adjlists){
-        Ok(file) => file,
-        Err(_err) => {
-            println!("{}\nLeitura falha", _err); 
-            return Err(_err);
-        }
-    };
-    let reader = BufReader::new(&file);
-
-    for (v, line) in reader.lines().enumerate() {
-        if let Ok(line) = line {
-            let line: Vec<&str> = line
-                .trim_end()
-                .split_whitespace()
-                .collect();
-
-            let mut adjacences: Vec<usize> = Vec::new();
-            for i in &line {
-                let i: Vec<&str> = i
-                    .split(",")
-                    .collect();
-                match i[0].parse::<usize>() {
-                    Ok(value) => {adjacences.push(value);},
-                    Err(_err) => {println!("{}", _err);},
-                }
-            }
-            graph.add_node(v, adjacences);
-
-        }
-    }
-    Ok(graph)
+    Ok(())
 }
 
-fn main() {
-    let mut archive = String::new();
-    println!("Input the name of the directory where are the informations about the graph:");
-    io::stdin().read_line(&mut archive).expect("");
-    //println!("{}", archive);
-    let path = format!("{}{}{}", String::from("../../graphs_ex/"), archive.trim_end(), String::from("/"));
-    let read_graph = read_graph_from_archive(path);
-    let mut graph: Graph = Graph::default();
-    if let Ok(value) = read_graph {
-        graph = value;
-    }
-    //graph.print_graph();
-    graph.print_nodes();
-}
