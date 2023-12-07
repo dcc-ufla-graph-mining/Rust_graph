@@ -1,0 +1,2 @@
+# Ignore the archives inside target directory
+graph_representation/src/target/*
