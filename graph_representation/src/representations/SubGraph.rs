@@ -42,19 +42,21 @@ impl SubGraph {
                 }
             }
         }
-        
-        SubGraph::basic_canonize(&mut adj, nodes.to_vec());
+        start_adj.push(adj.len());
+
+        SubGraph::basic_canonize(&mut adj, nodes);
         Graph::Graph::new_filled(start_adj, adj)
     }
 
-    pub fn basic_canonize(adjacences: &mut Vec<usize>, nodes: Vec<usize>) {
+    pub fn basic_canonize(adjacences: &mut Vec<usize>, nodes: &Vec<usize>) {
+        let mut map: HashMap<usize, usize> = HashMap::new();
+        for i in 0..nodes.len() {
+            map.insert(nodes[i], i);
+        }
+
         for i in 0..adjacences.len() {
-            if let Some((indice, _)) = &nodes
-                .iter()
-                .enumerate()
-                .find(|&(_, &x)| x == i) {
-                adjacences[i] = *indice;
-            }
+            let _aux = adjacences[i];
+            adjacences[i] = *map.get(&_aux).unwrap();
         }
     }
 
@@ -75,33 +77,44 @@ impl SubGraph {
             nodes_changed[i] = nodes_add;
 
             for j in aux {
-                if let Some(value) = map.get(&j) {
+                /*if let Some(value) = map.get(&j) {
                     adj_changed[nodes_add] = *value;
                     nodes_add += 1;
                 }
                 else {
                     break;
-                }
+                }*/
+                adj_changed[nodes_add] = *map.get(&j).unwrap();
+                nodes_add += 1;
             }
         }
+        //println!("{:?}\n{:?}", nodes_changed, adj_changed);
 
-        graph
+        Graph::Graph::new_filled(nodes_changed, adj_changed)
     }
 
-    pub fn get_canononical_pattern(&self) -> Graph::Graph {
+    pub fn get_canononical_pattern(&mut self) -> Graph::Graph {
         if self.label_flag {
             return self.canonical_pattern.clone();
         }
         
-        let canonical = match canon::canon(&self.pattern) {
-            Ok(canonical) => { 
-                let mut new_subgraph: Graph::Graph = self.canonical_pattern.clone();
-                return SubGraph::canon_labeling(self.canonical_pattern.clone(), canonical);
+        let _canonical = match canon::canon(&self.pattern) {
+            Ok(_canonical) => { 
+                //println!("{:?}", canonical);
+                //let mut new_subgraph: Graph::Graph = self.canonical_pattern.clone();
+                self.canonical_pattern = SubGraph::canon_labeling(self.pattern.clone(), _canonical);
+                self.label_flag = true;
+                //return self.canonical_pattern.clone();
             },
             Err(_) => {
                 return Graph::Graph::default();
             }
         };
+        self.canonical_pattern.clone()
+    }
+
+    pub fn print_pattern(&self) {
+        println!("{:?}", self.pattern);
     }
 }
 

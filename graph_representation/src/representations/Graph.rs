@@ -28,7 +28,7 @@ impl Graph {
 
     pub fn new_filled(start_adj: Vec<usize>, _adjacences: Vec<usize>) -> Graph {
         Graph {
-            num_nodes: start_adj.len(),
+            num_nodes: start_adj.len()-1,
             adjacences: _adjacences.clone(),
             nodes: start_adj,
             num_of_nodes_add: _adjacences.len(),
@@ -70,8 +70,9 @@ impl Graph {
     pub fn get_adjacences(&self, node: usize) -> Vec<usize> {
         let mut adj: Vec<usize> = Vec::new();
         //let i = self.nodes[node];
+        //println!("{:?}", self);
         for i in self.nodes[node]..self.nodes[node+1] {
-            adj.push(self.adjacences[i]);
+            adj.push(self.adjacences[i].clone());
         }
         adj
     }
