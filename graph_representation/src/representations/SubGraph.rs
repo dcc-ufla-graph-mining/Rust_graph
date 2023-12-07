@@ -30,14 +30,17 @@ impl SubGraph {
     pub fn extract_subgraph(graph: Graph::Graph, nodes: &Vec<usize>) -> Graph::Graph{
         let mut start_adj: Vec<usize> = Vec::new();
         let mut adj: Vec<usize> = Vec::new();
+        let mut edg: Vec<usize> = Vec::new();
         let mut count: usize = 0;
 
         for i in nodes {
             let adj_aux = graph.get_adjacences(*i);
+            let edg_aux = graph.get_edges(*i);
             start_adj.push(count);
-            for j in adj_aux {
-                if nodes.contains(&j) {
-                    adj.push(j);
+            for j in 0..adj_aux.len() {
+                if nodes.contains(&adj_aux[*i]) {
+                    adj.push(adj_aux[*i].clone());
+                    edg.push(edg_aux[*i].clone());
                     count += 1;
                 }
             }
@@ -45,7 +48,7 @@ impl SubGraph {
         start_adj.push(adj.len());
 
         SubGraph::basic_canonize(&mut adj, nodes);
-        Graph::Graph::new_filled(start_adj, adj)
+        Graph::Graph::new_filled(start_adj, adj, edg)
     }
 
     pub fn basic_canonize(adjacences: &mut Vec<usize>, nodes: &Vec<usize>) {
@@ -90,7 +93,7 @@ impl SubGraph {
         }
         //println!("{:?}\n{:?}", nodes_changed, adj_changed);
 
-        Graph::Graph::new_filled(nodes_changed, adj_changed)
+        Graph::Graph::new_filled(nodes_changed, adj_changed, vec![])
     }
 
     pub fn get_canononical_pattern(&mut self) -> Graph::Graph {

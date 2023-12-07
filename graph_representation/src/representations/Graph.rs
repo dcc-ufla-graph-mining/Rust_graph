@@ -8,6 +8,7 @@ use std::fs::File;
 pub struct Graph {
     num_nodes: usize,
     adjacences: Vec<usize>,
+    edges: Vec<usize>,
     nodes: Vec<usize>,
     num_of_nodes_add: usize,
     num_edges: usize,
@@ -20,29 +21,39 @@ impl Graph {
         Graph { 
             num_nodes: nodes,
             adjacences: Vec::with_capacity(2*edges),
+            edges: Vec::with_capacity(2*edges),
             nodes: _nodes,
             num_of_nodes_add: 0,
             num_edges: edges,
         }
     }
 
-    pub fn new_filled(start_adj: Vec<usize>, _adjacences: Vec<usize>) -> Graph {
+    pub fn new_filled(start_adj: Vec<usize>, _adjacences: Vec<usize>, _edges: Vec<usize>) -> Graph {
         Graph {
             num_nodes: start_adj.len()-1,
             adjacences: _adjacences.clone(),
+            edges: _edges,
             nodes: start_adj,
             num_of_nodes_add: _adjacences.len(),
             num_edges: _adjacences.len(),
         }
     }
 
-    pub fn add_node(&mut self, node: usize, adjacences_of_node: Vec<usize>) {
+    fn change_edge_value(&mut self, edge_value: Vec<usize>) {
+        println!("{:?}\n{:?}", self.edges, edge_value);
+        for i in 0..self.edges.len() {
+            self.edges[i] = edge_value[self.edges[i]];
+        }
+    }
+
+    pub fn add_node(&mut self, node: usize, adjacences_of_node: Vec<usize>, e_label: Vec<usize>) {
         if adjacences_of_node.len() > 0 {
             //self.nodes.push(self.num_of_nodes_add);
             self.nodes[node] = self.num_of_nodes_add;
             
-            for i in &adjacences_of_node {
-                self.adjacences.push(*i);
+            for i in 0..adjacences_of_node.len() {
+                self.adjacences.push(adjacences_of_node[i]);
+                self.edges.push(e_label[i]);
             }
         }
         else {
@@ -77,6 +88,15 @@ impl Graph {
         adj
     }
 
+    pub fn get_edges(&self, node:usize) -> Vec<usize> {
+        let mut edg: Vec<usize> = Vec::new();
+
+        for i in self.nodes[node]..self.nodes[node+1] {
+            edg.push(self.edges[i].clone());
+        }
+        edg
+    }
+
     pub fn get_all_adjacences(&self) -> Vec<usize> {
         self.adjacences.clone()
     }
@@ -100,7 +120,7 @@ pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
     let mut file = match File::open(&metadata){
         Ok(file) => file,
         Err(_err) => {
-            println!("{}111", _err); 
+            println!("{}", _err); 
             return Err(_err);
         }
     };
@@ -144,19 +164,33 @@ pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
                 .collect();
 
             let mut adjacences: Vec<usize> = Vec::new();
+            let mut e_label: Vec<usize> = Vec::new();
             for i in &line {
                 let i: Vec<&str> = i
                     .split(",")
                     .collect();
-                match i[0].parse::<usize>() {
-                    Ok(value) => {adjacences.push(value);},
-                    Err(_err) => {println!("{}", _err);},
-                }
+                adjacences.push(i[0].parse().unwrap());
+                e_label.push(i[1].parse().unwrap());
             }
-            graph.add_node(v, adjacences);
+            graph.add_node(v, adjacences, e_label);
 
         }
     }
+    let labels = format!("{}{}", archives_path, String::from("elabels"));
+    let file = File::open(&labels).unwrap();
+    let reader = BufReader::new(&file);
+    let mut edge_value: Vec<usize> = Vec::new();
+
+    for (_, line) in reader.lines().enumerate() {
+        if let Ok(line) = line {
+            let line: usize = line.trim_end().parse().unwrap();
+
+            edge_value.push(line);
+        }
+    }
+    println!("{:?}", edge_value);
+    graph.change_edge_value(edge_value);
+
     Ok(graph)
 }
 /*

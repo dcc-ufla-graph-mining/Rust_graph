@@ -1,15 +1,16 @@
 use std::io;
+use rand::Rng;
 
 mod representations ;
 use representations as rep;
 
-mod tarjan;
+mod utils;
 mod canonize;
 //use canonize as can;
 
 
 fn main() -> Result<(),Box<dyn std::error::Error>>{
-    let graph = rep::Graph::read_graph_from_archive("../../graphs_ex/other_graph/".to_string())?;
+    let graph = rep::Graph::read_graph_from_archive("graphs_ex/other_graph/".to_string())?;
     println!("{:?}", graph);
     /*
     let mut input = String::new();
@@ -26,7 +27,8 @@ fn main() -> Result<(),Box<dyn std::error::Error>>{
     //println!("{:?}", sub_graph);
     //sub_graph.get_canononical_pattern();
     //println!("{:?}", sub_graph);
-    tarjan::tarjan(&graph);
+    utils::tarjan::tarjan(&graph);
+
     Ok(())
 }
 
