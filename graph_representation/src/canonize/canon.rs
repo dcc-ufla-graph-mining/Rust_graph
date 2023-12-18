@@ -28,7 +28,7 @@ pub fn canon(graph: &Graph) -> Result<Vec<usize>, Box<dyn std::error::Error>> {
     let mut canong = empty_graph(m, n);
     
     for v in 0..n {
-        let adj = graph.get_adjacences(v);
+        let adj = graph.get_adjacencies(v);
         for i in adj{
             ADDONEEDGE(&mut g, v, i, m);
         }

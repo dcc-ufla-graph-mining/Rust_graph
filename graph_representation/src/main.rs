@@ -1,5 +1,5 @@
 use std::io;
-use rand::Rng;
+
 
 mod representations ;
 use representations as rep;
@@ -8,11 +8,21 @@ mod utils;
 mod canonize;
 //use canonize as can;
 
+/*
+ *
+ *
+ *
+ *  Adaptar o tarjan para usar subgrafo
+ *
+ *
+ *
+ *
+ */
 
 fn main() -> Result<(),Box<dyn std::error::Error>>{
     let graph = rep::Graph::read_graph_from_archive("graphs_ex/other_graph/".to_string())?;
-    println!("{:?}", graph);
-    /*
+    graph.print_graph();
+    
     let mut input = String::new();
 
     io::stdin().read_line(&mut input)?;
@@ -20,14 +30,16 @@ fn main() -> Result<(),Box<dyn std::error::Error>>{
         .split_whitespace()
         .filter_map(|part| part.parse().ok())
         .collect();
+    //println!("\n\n{:?}", nodes);
+    let mut sub_graph = rep::SubGraph::SubGraph::new(nodes, &graph);
+    
+    println!("{:?}\n", sub_graph);
+    sub_graph.print_original();
+    println!("Value: {}", sub_graph.get_graph_value());
+    
+    
 
-    let mut sub_graph = rep::SubGraph::SubGraph::new(nodes, graph.clone());
-    */
-    //sub_graph.print_pattern();
-    //println!("{:?}", sub_graph);
-    //sub_graph.get_canononical_pattern();
-    //println!("{:?}", sub_graph);
-    utils::tarjan::tarjan(&graph);
+    utils::aprimoration::aprimoration(&graph, &sub_graph, utils::tarjan::tarjan(&graph));
 
     Ok(())
 }

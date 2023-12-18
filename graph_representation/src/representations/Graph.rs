@@ -7,11 +7,11 @@ use std::fs::File;
 #[derive(Clone)]
 pub struct Graph {
     num_nodes: usize,
-    adjacences: Vec<usize>,
-    edges: Vec<usize>,
-    nodes: Vec<usize>,
-    num_of_nodes_add: usize,
     num_edges: usize,
+    adjacencies: Vec<usize>,
+    edges: Vec<usize>,
+    edges_value: Vec<usize>,
+    nodes: Vec<usize>,
 }
 
 impl Graph {
@@ -20,47 +20,42 @@ impl Graph {
         _nodes[nodes] = 2*edges;
         Graph { 
             num_nodes: nodes,
-            adjacences: Vec::with_capacity(2*edges),
+            adjacencies: Vec::with_capacity(2*edges),
             edges: Vec::with_capacity(2*edges),
+            edges_value: Vec::with_capacity(edges),
             nodes: _nodes,
-            num_of_nodes_add: 0,
             num_edges: edges,
         }
     }
 
-    pub fn new_filled(start_adj: Vec<usize>, _adjacences: Vec<usize>, _edges: Vec<usize>) -> Graph {
+    pub fn new_filled(start_adj: Vec<usize>, _adjacencies: Vec<usize>, _edges: Vec<usize>, _edges_value: Vec<usize>) -> Graph {
         Graph {
             num_nodes: start_adj.len()-1,
-            adjacences: _adjacences.clone(),
+            adjacencies: _adjacencies.clone(),
             edges: _edges,
+            edges_value: _edges_value,
             nodes: start_adj,
-            num_of_nodes_add: _adjacences.len(),
-            num_edges: _adjacences.len(),
+            num_edges: _adjacencies.len(),
         }
     }
 
-    fn change_edge_value(&mut self, edge_value: Vec<usize>) {
-        println!("{:?}\n{:?}", self.edges, edge_value);
-        for i in 0..self.edges.len() {
-            self.edges[i] = edge_value[self.edges[i]];
+    fn set_edge_value(&mut self, edge_value: Vec<usize>) {
+        for i in 0..edge_value.len() {
+            self.edges_value.push(edge_value[i]);
         }
     }
 
-    pub fn add_node(&mut self, node: usize, adjacences_of_node: Vec<usize>, e_label: Vec<usize>) {
-        if adjacences_of_node.len() > 0 {
-            //self.nodes.push(self.num_of_nodes_add);
-            self.nodes[node] = self.num_of_nodes_add;
-            
-            for i in 0..adjacences_of_node.len() {
-                self.adjacences.push(adjacences_of_node[i]);
+    pub fn add_node(&mut self, node: usize, adjacencies_of_node: Vec<usize>, e_label: Vec<usize>, last_position: usize) -> usize {
+        self.nodes[node] = last_position;
+
+        if adjacencies_of_node.len() > 0 {
+            for i in 0..adjacencies_of_node.len() {
+                self.adjacencies.push(adjacencies_of_node[i]);
                 self.edges.push(e_label[i]);
             }
         }
-        else {
-            self.nodes[node] = self.num_of_nodes_add;
-        }
-        self.num_of_nodes_add += adjacences_of_node.len();
         
+        adjacencies_of_node.len()
     }
 
     pub fn print_graph(&self) {
@@ -68,7 +63,7 @@ impl Graph {
             print!("{} - ", i);
 
             for j in self.nodes[i]..self.nodes[i+1]{
-                print!("{} ", self.adjacences[j]);
+                print!("{},{} ", self.adjacencies[j], self.edges_value[self.edges[j]]);
             }
             println!();
         }
@@ -78,12 +73,12 @@ impl Graph {
         println!("{:?}", self.nodes);
     }
 
-    pub fn get_adjacences(&self, node: usize) -> Vec<usize> {
+    pub fn get_adjacencies(&self, node: usize) -> Vec<usize> {
         let mut adj: Vec<usize> = Vec::new();
         //let i = self.nodes[node];
         //println!("{:?}", self);
         for i in self.nodes[node]..self.nodes[node+1] {
-            adj.push(self.adjacences[i].clone());
+            adj.push(self.adjacencies[i].clone());
         }
         adj
     }
@@ -97,8 +92,12 @@ impl Graph {
         edg
     }
 
-    pub fn get_all_adjacences(&self) -> Vec<usize> {
-        self.adjacences.clone()
+    pub fn get_all_edges(&self) -> Vec<usize> {
+        self.edges.clone()
+    }
+
+    pub fn get_all_adjacencies(&self) -> Vec<usize> {
+        self.adjacencies.clone()
     }
 
     pub fn get_nodes(&self) -> Vec<usize> {
@@ -109,26 +108,40 @@ impl Graph {
         let num_nodes = self.num_nodes;
         num_nodes
     }
+
+    pub fn get_all_edges_value(&self) -> Vec<usize> {
+        self.edges_value.clone()
+    }
+
+    pub fn get_edge_value(&self, node: usize) -> usize {
+        self.edges_value[node]
+    }
 }
+
+
 
 /*
  * Read a Graphs from some archives in a formated pattern
  */
 pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
     let metadata = format!("{}{}", archives_path, String::from("metadata"));
-    println!("{}", metadata);
+    //println!("{}", metadata);
     let mut file = match File::open(&metadata){
         Ok(file) => file,
         Err(_err) => {
-            println!("{}", _err); 
+            println!("Error in find the archive."); 
             return Err(_err);
         }
     };
     
-    // Take a line in metadata, transform in a vector of strings and
-    // after transform in a vector of usize
-    // In the end, create the graph with informations:
-    // number of nodes and number of edges
+    /*
+     *
+     * Take a line in metadata, transform in a vector of strings and
+     * after transform in a vector of usize
+     * In the end, create the graph with informations:
+     * number of nodes and number of edges
+     *
+     */
     let mut line = String::new();
     file.read_to_string(&mut line)?;
     let line: Vec<&str> = line
@@ -142,10 +155,14 @@ pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
 
     let mut graph: Graph = Graph::new(features[0], features[1]);
 
-    // Run in adjlists archive, taking each line, transforming in a vector 
-    // of string, transforming into another vector of strings for access only
-    // the first element, and in the end take the first element of the vector
-    // and transform in a usize for ading as an element adjacence of the node
+    /*
+     *
+     *  Run in adjlists archive, taking each line, transforming in a vector 
+     *  of string, transforming into another vector of strings for access only
+     *  the first element, and in the end take the first element of the vector
+     *  and transform in a usize for ading as an element adjacencie of the node
+     *
+     */
     let adjlists = format!("{}{}", archives_path, String::from("adjlists"));
     let file = match File::open(&adjlists){
         Ok(file) => file,
@@ -155,6 +172,7 @@ pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
         }
     };
     let reader = BufReader::new(&file);
+    let mut last_node_position = 0;
 
     for (v, line) in reader.lines().enumerate() {
         if let Ok(line) = line {
@@ -163,19 +181,23 @@ pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
                 .split_whitespace()
                 .collect();
 
-            let mut adjacences: Vec<usize> = Vec::new();
+            let mut adjacencies: Vec<usize> = Vec::new();
             let mut e_label: Vec<usize> = Vec::new();
             for i in &line {
                 let i: Vec<&str> = i
                     .split(",")
                     .collect();
-                adjacences.push(i[0].parse().unwrap());
+                adjacencies.push(i[0].parse().unwrap());
                 e_label.push(i[1].parse().unwrap());
             }
-            graph.add_node(v, adjacences, e_label);
-
+            last_node_position += graph.add_node(v, adjacencies, e_label, last_node_position);
         }
     }
+
+    /*
+     *  Run in elabels archive, storing in a vector
+     *  the value of the edges.
+     */
     let labels = format!("{}{}", archives_path, String::from("elabels"));
     let file = File::open(&labels).unwrap();
     let reader = BufReader::new(&file);
@@ -188,23 +210,9 @@ pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
             edge_value.push(line);
         }
     }
-    println!("{:?}", edge_value);
-    graph.change_edge_value(edge_value);
+
+    graph.set_edge_value(edge_value); // Stores graph struct the value of edges
 
     Ok(graph)
 }
-/*
-fn main() {
-    let mut archive = String::new();
-    println!("Input the name of the directory where are the informations about the graph:");
-    io::stdin().read_line(&mut archive).expect("");
-    //println!("{}", archive);
-    let path = format!("{}{}{}", String::from("../../graphs_ex/"), archive.trim_end(), String::from("/"));
-    let read_graph = read_graph_from_archive(path);
-    let mut graph: Graph = Graph::default();
-    if let Ok(value) = read_graph {
-        graph = value;
-    }
-    graph.print_graph();
-    //graph.print_nodes();
-}*/
+

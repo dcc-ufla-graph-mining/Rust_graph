@@ -7,7 +7,7 @@ fn DFS(graph: &Gr, discover_time: &mut Vec<isize>, low: &mut Vec<isize>, node: u
     counter += 1;
     let mut children = 0;
 
-    for i in graph.get_adjacences(node) {
+    for i in graph.get_adjacencies(node) {
         if low[i] == -1 {
             children += 1;
 
@@ -28,7 +28,7 @@ fn DFS(graph: &Gr, discover_time: &mut Vec<isize>, low: &mut Vec<isize>, node: u
     }
 }
 
-pub fn tarjan(graph: &Gr) {
+pub fn tarjan(graph: &Gr) -> Vec<usize> {
     let num_nodes = graph.get_num_nodes();
     let mut discover_time: Vec<isize> = vec![-1; num_nodes];
     let mut low: Vec<isize> = vec![-1; num_nodes];
@@ -38,5 +38,5 @@ pub fn tarjan(graph: &Gr) {
     discover_time[0] = 0;
     low[0] = 0;
     DFS(&graph, &mut discover_time, &mut low, 0, global_counter, -1, &mut articulation);
-    println!("{:?}", articulation);
+    articulation
 }
