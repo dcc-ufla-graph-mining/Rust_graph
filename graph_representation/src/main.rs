@@ -6,18 +6,7 @@ use representations as rep;
 
 mod utils;
 mod canonize;
-//use canonize as can;
 
-/*
- *
- *
- *
- *  Adaptar o tarjan para usar subgrafo
- *
- *
- *
- *
- */
 
 fn main() -> Result<(),Box<dyn std::error::Error>>{
     let graph = rep::Graph::read_graph_from_archive("graphs_ex/other_graph/".to_string())?;
@@ -37,9 +26,15 @@ fn main() -> Result<(),Box<dyn std::error::Error>>{
     sub_graph.print_original();
     println!("Value: {}", sub_graph.get_graph_value());
     
-    
+    io::stdin().read_line(&mut input)?;
 
-    utils::aprimoration::aprimoration(&graph, &sub_graph, utils::tarjan::tarjan(&graph));
+    let _articulation = utils::tarjan::tarjan(sub_graph.get_pattern());
+    let mut articulations: Vec<usize> = Vec::new();
+
+    for i in _articulation {
+        articulations.push(sub_graph.get_nodes()[i]);
+    }
+    utils::aprimoration::aprimoration(&graph, &sub_graph, articulations);
 
     Ok(())
 }

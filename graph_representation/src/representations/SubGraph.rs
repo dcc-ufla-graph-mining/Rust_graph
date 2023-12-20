@@ -78,6 +78,16 @@ impl SubGraph {
 
     /*
      *
+     *  Returns a reference to subgraph pattern
+     *
+     */
+    
+    pub fn get_pattern(&self) -> &Graph::Graph {
+        &self.pattern
+    }
+
+    /*
+     *
      *  Use the canonical label getted from nauty_traces and 
      *  canonize the graph.
      *
