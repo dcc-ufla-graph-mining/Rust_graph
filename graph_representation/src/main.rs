@@ -34,7 +34,10 @@ fn main() -> Result<(),Box<dyn std::error::Error>>{
     for i in _articulation {
         articulations.push(sub_graph.get_nodes()[i]);
     }
-    utils::aprimoration::aprimoration(&graph, &sub_graph, articulations);
+    let new_subgraph = utils::aprimoration::aprimoration(&graph, &sub_graph, articulations).unwrap();
+    println!("{:?}", new_subgraph);
+    new_subgraph.print_original();
+    println!("{}", new_subgraph.get_graph_value());
 
     Ok(())
 }

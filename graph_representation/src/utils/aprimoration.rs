@@ -5,9 +5,12 @@ use representations::Graph::Graph as Gr;
 use representations::SubGraph::SubGraph as Sg;
 
 
-pub fn aprimoration(graph: &Gr, subgraph: &Sg, articulations: Vec<usize>) {
+pub fn aprimoration(graph: &Gr, subgraph: &Sg, articulations: Vec<usize>) -> Option<Sg> {
     let mut non_articulation: HashSet<usize> = HashSet::new();
     let mut nodes_aux: HashSet<usize> = HashSet::new();
+
+    let mut nodes_removed_and_added: Vec<usize> = vec![subgraph.get_nodes()[0], subgraph.get_nodes()[0]];
+    let mut diff_global: usize = 0;
 
     for i in subgraph.get_nodes() {
         nodes_aux.insert(i);
@@ -65,8 +68,14 @@ pub fn aprimoration(graph: &Gr, subgraph: &Sg, articulations: Vec<usize>) {
                 }
             }
 
-            if diff < diff_node_added {
-                println!("Remover o vertice {} e adicionar o {},compensa", *i, j);
+            if diff_node_added - diff > diff_global {
+                diff_global = diff_node_added - diff;
+                nodes_removed_and_added[0] = *i;
+                nodes_removed_and_added[1] = *j;
+                println!("{:?}", nodes_removed_and_added);
+
+
+                println!("Remover o vertice {} e adicionar o {},compensa", i, j);
                 println!("Arestas adicionadas: {:?}", edges_added);
                 print!("Valor das arestas adicionadas: ");
                 for k in edges_added.iter() {
@@ -76,9 +85,26 @@ pub fn aprimoration(graph: &Gr, subgraph: &Sg, articulations: Vec<usize>) {
                 println!("No que gera melhora: {}\n", j);
             }
             else {
-                println!("Remover vertice {} e adicionar {} nao compensa", *i, j);
+                println!("Remover vertice {} e adicionar {} nao compensa ou tem alguma combinação melhor", *i, j);
             }
         }
-        
     }
+
+    println!("{:?}", nodes_removed_and_added);
+
+    if nodes_removed_and_added[0] != nodes_removed_and_added[1] {
+        println!("Se ta aqui, eh porque ta certo!");
+
+        nodes_aux.remove(&nodes_removed_and_added[0]);
+        nodes_aux.insert(nodes_removed_and_added[1]);
+        let mut new_nodes: Vec<usize> = Vec::new();
+
+        for i in nodes_aux {
+            new_nodes.push(i);
+        }
+        new_nodes.sort();
+        return Some(Sg::new(new_nodes, graph));
+    }
+
+    None
 }
