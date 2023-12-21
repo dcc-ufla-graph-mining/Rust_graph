@@ -199,7 +199,14 @@ pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
      *  the value of the edges.
      */
     let labels = format!("{}{}", archives_path, String::from("elabels"));
-    let file = File::open(&labels).unwrap();
+    let file = match File::open(&labels) {
+        Ok(file) => file,
+        Err(err) => {
+            println!("Error in read elabels archive.\n{}", err);
+            return Err(err);
+        },
+    };
+
     let reader = BufReader::new(&file);
     let mut edge_value: Vec<usize> = Vec::new();
 

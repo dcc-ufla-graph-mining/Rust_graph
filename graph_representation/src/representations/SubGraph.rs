@@ -7,6 +7,7 @@ use crate::canonize::canon;
 
 //pub mod representations;
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct SubGraph {
     sizeof: usize,
     nodes: Vec<usize>,

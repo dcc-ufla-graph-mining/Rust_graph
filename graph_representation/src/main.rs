@@ -20,7 +20,7 @@ fn main() -> Result<(),Box<dyn std::error::Error>>{
         .filter_map(|part| part.parse().ok())
         .collect();
     //println!("\n\n{:?}", nodes);
-    let mut sub_graph = rep::SubGraph::SubGraph::new(nodes, &graph);
+    let sub_graph = rep::SubGraph::SubGraph::new(nodes, &graph);
     
     println!("{:?}\n", sub_graph);
     sub_graph.print_original();
@@ -34,10 +34,21 @@ fn main() -> Result<(),Box<dyn std::error::Error>>{
     for i in _articulation {
         articulations.push(sub_graph.get_nodes()[i]);
     }
-    let new_subgraph = utils::aprimoration::aprimoration(&graph, &sub_graph, articulations).unwrap();
-    println!("{:?}", new_subgraph);
-    new_subgraph.print_original();
-    println!("{}", new_subgraph.get_graph_value());
+
+    let mut new_subgraph = sub_graph.clone();
+    let mut continue_aprimoration: bool = true;
+    while continue_aprimoration {
+        match utils::aprimoration::aprimoration(&graph, &new_subgraph, articulations.clone(), false) {
+            Some(value) => {
+                new_subgraph = value;
+                println!("Coisas estao acontecenco aqui");
+            },
+            None => continue_aprimoration = false,
+        }
+        println!("{:?}", new_subgraph);
+        new_subgraph.print_original();
+        println!("{}", new_subgraph.get_graph_value());
+    }
 
     Ok(())
 }
