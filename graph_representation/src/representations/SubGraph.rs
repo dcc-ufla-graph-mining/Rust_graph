@@ -17,6 +17,7 @@ pub struct SubGraph {
     // trocar label por grafo canonico
 }
 
+#[allow(dead_code)]
 impl SubGraph {
     pub fn new(nodes_of_graph: Vec<usize>, large_graph: &Graph::Graph) -> SubGraph{
         let graph = SubGraph::extract_subgraph(large_graph, &nodes_of_graph);
@@ -39,7 +40,9 @@ impl SubGraph {
         let mut start_adj: Vec<usize> = Vec::new(); // Stores the start position of a adjacencie
         let mut adj: Vec<usize> = Vec::new(); // Stores the adjacencies
         let mut edg: Vec<usize> = Vec::new();
+        let mut edg_value: Vec<usize> = Vec::new();
         let mut count: usize = 0;
+        let all_edges = graph.get_all_edges_value();
 
         for i in nodes {
             let adj_aux = graph.get_adjacencies(*i);
@@ -55,8 +58,23 @@ impl SubGraph {
         }
         start_adj.push(adj.len());
 
+        let mut hash: HashMap<usize,usize> = HashMap::new();
+        let mut index = 0;
+        for i in 0..edg.len() {
+            if let Some(valor) = hash.get(&edg[i]) { continue; }
+            else { hash.insert(edg[i], index); index += 1; }
+        }
+
+        for (key, element) in &hash {
+            edg_value.push(all_edges[*key]);
+        }
+
+        for i in 0..edg.len() {
+            edg[i] = *hash.get(&edg[i]).unwrap();
+        }
+
         SubGraph::set_pattern(&mut adj, nodes);
-        Graph::Graph::new_filled(start_adj, adj, edg, graph.get_all_edges_value())
+        Graph::Graph::new_filled(start_adj, adj, edg, edg_value)
     }
 
     /*
@@ -171,18 +189,26 @@ impl SubGraph {
 
     pub fn get_graph_value(&self) -> usize {
         let mut value: usize = 0;
-        let mut edg_aux: HashSet<usize> = HashSet::new();
-        for i in self.pattern.get_all_edges() {
-            edg_aux.insert(i);
-        }
-        for i in &edg_aux{
-            value += self.pattern.get_edge_value(*i);
+        for i in self.pattern.get_all_edges_value() {
+            value += i;
         }
         value
     }
 
     pub fn get_nodes(&self) -> Vec<usize> {
         self.nodes.clone()
+    }
+
+    pub fn get_node_index(&self, node: usize) -> usize {
+        let mut wanted_node = 0;
+        for i in 0..self.nodes.len() {
+            if self.nodes[i] == node { wanted_node = i; break; }
+        }
+        wanted_node
+    }
+
+    pub fn get_density(&self) -> f64{
+        (self.get_pattern().get_num_edges() as f64 * 2.0) / (self.get_nodes().len() as f64 * (self.get_nodes().len() as f64 - 1.0))
     }
 }
 

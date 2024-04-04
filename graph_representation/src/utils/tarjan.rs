@@ -1,6 +1,7 @@
 use crate::representations::Graph;
 use Graph::Graph as Gr;
 
+#[allow(non_snake_case)]
 fn DFS(graph: &Gr, discover_time: &mut Vec<isize>, low: &mut Vec<isize>, node: usize, mut counter: isize, parent: isize, articulation: &mut Vec<usize>) {
     discover_time[node] = counter;
     low[node] = counter;
@@ -37,6 +38,7 @@ pub fn tarjan(graph: &Gr) -> Vec<usize> {
 
     discover_time[0] = 0;
     low[0] = 0;
+    graph.print_graph();
     DFS(&graph, &mut discover_time, &mut low, 0, global_counter, -1, &mut articulation);
     articulation
 }

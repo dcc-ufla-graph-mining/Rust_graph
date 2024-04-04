@@ -14,10 +14,10 @@ pub struct Graph {
     nodes: Vec<usize>,
 }
 
+#[allow(dead_code)]
 impl Graph {
     pub fn new(nodes: usize, edges: usize) -> Graph{
         let mut _nodes = vec![0; nodes+1];
-        _nodes[nodes] = 2*edges;
         Graph { 
             num_nodes: nodes,
             adjacencies: Vec::with_capacity(2*edges),
@@ -35,7 +35,7 @@ impl Graph {
             edges: _edges,
             edges_value: _edges_value,
             nodes: start_adj,
-            num_edges: _adjacencies.len(),
+            num_edges: _adjacencies.len()/2,
         }
     }
 
@@ -116,6 +116,21 @@ impl Graph {
     pub fn get_edge_value(&self, node: usize) -> usize {
         self.edges_value[node]
     }
+
+    pub fn get_num_edges(&self) -> usize{
+        self.num_edges
+    }
+
+    pub fn print_graph_info(&self) {
+        println!("{}", self.num_nodes);
+        println!("{}", self.num_edges);
+    }
+
+    pub fn try_fix(&self) {
+        println!("Número de nós, segundo a quantidade deles adicionados: {}", self.nodes.len());
+        println!("Número de ligações vertice-vertice, segundo a quantidade adicionada: {}", self.adjacencies.len());
+        println!("Começo da adjacencia do ultimo vertice e do vertice auxiliar imaginario: {}, {}", self.nodes[self.num_nodes-1], self.nodes[self.num_nodes]);
+    }
 }
 
 
@@ -188,11 +203,12 @@ pub fn read_graph_from_archive (archives_path: String) -> Result<Graph, Error>{
                     .split(",")
                     .collect();
                 adjacencies.push(i[0].parse().unwrap());
-                e_label.push(i[1].parse().unwrap());
+                e_label.push(i[2].parse().unwrap());
             }
             last_node_position += graph.add_node(v, adjacencies, e_label, last_node_position);
         }
     }
+    graph.nodes[graph.num_nodes] = last_node_position;
 
     /*
      *  Run in elabels archive, storing in a vector
